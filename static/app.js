@@ -33,6 +33,8 @@ function imageBlock(a){
  return `<div class="media-block"><figure class="media-frame" data-canvas="${a.format==='photo'?'photo':'standard'}"><img data-image-id="${esc(a.id)}" loading="lazy" decoding="async" width="960" height="640" alt="${esc(im.alt||'Image supplied with this discovery')}" data-contain="${['recommendation','book','photo'].includes(a.format)}" data-pending="true"><p class="image-status small">Loading credited image…</p></figure><div class="media-credit">${esc(im.credit)} · <a href="${esc(safeUrl(im.license_url))}" target="_blank" rel="noopener noreferrer">${esc(im.license)} / source</a></div></div>`;
 }
 function item(a,featured=false){
+ // Repair the known broken NASA destination in saved editions without changing article IDs or votes.
+ if(a.url==='https://images.nasa.gov/details/AS17-148-22727')a={...a,url:'https://commons.wikimedia.org/wiki/File:The_Earth_seen_from_Apollo_17.jpg',source:'NASA via Wikimedia Commons'};
  const index=(state.edition?.sections||SLOTS).indexOf(a.section);
  const date=a.evergreen?'Evergreen discovery':a.published?new Date(a.published).toLocaleDateString('en-GB'):'Publication date not supplied';
  const media=imageBlock(a);
