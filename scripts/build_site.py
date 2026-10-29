@@ -29,7 +29,7 @@ def build(out,config):
     (out/'.nojekyll').touch()
     # CSP travels with the static page because Pages does not support custom headers.
     index=(out/'index.html').read_text(encoding='utf-8')
-    csp="default-src 'self'; script-src 'self'; style-src 'self'; connect-src "+config['supabaseUrl']+"; img-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+    csp="default-src 'self'; script-src 'self'; style-src 'self'; connect-src "+config['supabaseUrl']+"; img-src 'self' "+config['supabaseUrl']+"; object-src 'none'; base-uri 'self'; form-action 'self'"
     index=index.replace('<meta name="viewport"', '<meta http-equiv="Content-Security-Policy" content="'+csp+'"><meta name="viewport"')
     (out/'index.html').write_text(index,encoding='utf-8')
 def main():

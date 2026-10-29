@@ -26,7 +26,7 @@ window.MeadowCloud = (() => {
     if (!r.ok) {
       if (r.status === 401) { clean(); throw locked('Your session has expired. Please sign in again.'); }
       const e = new Error(r.status === 403 || data?.code === '42501' ? 'This account is not registered as the owner of The Meadow.' : data?.message || data?.msg || data?.error_description || 'The private service could not complete that request.');
-      e.status = r.status; throw e;
+      e.status = r.status; e.code=data?.code; throw e;
     }
     return data;
   }
@@ -84,13 +84,24 @@ window.MeadowCloud = (() => {
     }
     if (action === 'state') {
       const s = await rpc('meadow_state',{p_day:u.searchParams.get('day') || null});
-      s.sections = SECTIONS;
+      s.sections = s.edition?.sections || SECTIONS;
+      try{s.pilot=await rpc('meadow_pilot_state')}catch(e){if(e.status===404 || e.code==='PGRST202')s.pilot={ready:false};else throw e}
       s.feedback = s.feedback.map(f=>({...f,payload:f.payload ? JSON.stringify(f.payload) : null}));
       return s;
     }
-    if (action === 'backup') return rpc('meadow_export');
+    if (action === 'backup') {try{return await rpc('meadow_pilot_export')}catch(e){if(e.status===404 || e.code==='PGRST202')return rpc('meadow_export');throw e}}
+    if(action === 'profile')return rpc('meadow_pilot_action',{p_action:'profile',p_body:data});
+    if(['vote','feedback','reset'].includes(action) && data?.pilot)return rpc('meadow_pilot_action',{p_action:action,p_body:data});
     if (['vote','feedback','delete-feedback','settings','reset'].includes(action)) return rpc('meadow_action',{p_action:action,p_body:data});
     throw Error('This action is not available in the static website.');
   }
-  return {enabled,init,api,workflowUrl};
+  async function imageUrl(image){
+    if(!image?.cache_path || image.bucket!=='meadow-media' || !/^[a-f0-9]{32}\.(jpg|png|webp)$/.test(image.cache_path))return null;
+    await ready();const result=await request('/storage/v1/object/sign/meadow-media/'+image.cache_path,{expiresIn:300},true);
+    const signed=result.signedURL || result.signedUrl;if(!signed)throw Error('Image link unavailable');
+    const u=new URL(signed.startsWith('/object/')?config.supabaseUrl.replace(/\/$/,'')+'/storage/v1'+signed:signed,config.supabaseUrl);
+    if(u.origin!==new URL(config.supabaseUrl).origin || !u.pathname.startsWith('/storage/v1/object/sign/meadow-media/'))throw Error('Invalid image URL');return u.href;
+  }
+  function pilotWorkflowUrl(){return workflowUrl().replace('/daily.yml','/magazine-pilot.yml')}
+  return {enabled,init,api,workflowUrl,pilotWorkflowUrl,imageUrl};
 })();

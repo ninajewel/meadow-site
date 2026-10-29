@@ -4,7 +4,7 @@ Your daily dose of wonder, wisdom and wonderful things.
 
 This repository contains only the public website interface and its build/publishing workflow. Editions, votes, preferences and written feedback are stored privately in Supabase and are never included in the published files. Sign-in and database authorization are required to retrieve them.
 
-The interface is copied unchanged from the main Meadow application. Daily generation runs separately in the private generator repository. This repository has no scheduled workflow and does not deploy on a push.
+The interface uses the approved Pop & Perspective magazine design and supports twelve-discovery editions, private scoped feedback and the original edition archive. Only interface assets are copied from the private Meadow application. Daily generation runs separately in the private generator repository. This repository has no scheduled workflow and does not deploy on a push.
 
 ## One-time setup
 
