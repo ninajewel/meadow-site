@@ -1,0 +1,39 @@
+name: Publish Meadow interface
+# Manually enabled by the owner in the PUBLIC interface repository only.
+# This workflow is never run by daily generation, and never publishes private data.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: meadow-pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build public interface only
+        env:
+          MEADOW_SUPABASE_URL: ${{ vars.MEADOW_SUPABASE_URL }}
+          MEADOW_SUPABASE_PUBLIC_KEY: ${{ vars.MEADOW_SUPABASE_PUBLIC_KEY }}
+          MEADOW_GENERATOR_REPOSITORY: ${{ vars.MEADOW_GENERATOR_REPOSITORY }}
+        run: python scripts/build_site.py --output site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
